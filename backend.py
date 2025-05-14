@@ -8,11 +8,17 @@ rekordy = mysql.connector.connect(
     host=os.getenv("MYSQL_HOST", "localhost").split(":")[0],
     port=5432,
     user='postgres',
-    password='password'
+    password='password',
+    database='records'
 )
 
 bucket_name = "avn29rbyczr9b3vz9wbycri3oivbsieuybc3cwi"
-s3_client = boto3.client("s3")
+s3_client = boto3.client("s3",
+    aws_access_key_id=os.getenv("AK_ID", ""), 
+    aws_secret_access_key=os.getenv("AK_SECRET", ""), 
+    region_name=os.getenv("REGION", "us-east-1"),
+    session_token=os.getenv("SESSION_TOKEN", "")
+)
 
 app = Flask(__name__)
 
