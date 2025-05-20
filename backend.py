@@ -12,7 +12,7 @@ rekordy = mysql.connector.connect(
     database='records'
 )
 
-rekordy.get_cursor().execute("CREATE TABLE IF NOT EXISTS rekordy (id INT AUTO_INCREMENT PRIMARY KEY, record VARCHAR(255))")
+rekordy.cursor().execute("CREATE TABLE IF NOT EXISTS rekordy (id INT AUTO_INCREMENT PRIMARY KEY, record VARCHAR(255))")
 
 bucket_name = os.getenv("BUCKET_NAME", "rekordy-bucket")
 s3_client = boto3.client("s3",
@@ -60,16 +60,20 @@ def add_record():
         with rekordy.cursor() as cur:
             cur.execute("INSERT INTO rekordy (record) VALUES (%s)", (record,))
             rekordy.commit()
-        return jsonify({"message": "Record added successfully"})
+        response = jsonify({"message": "Record added successfully"})
     else:
-        return jsonify({"error": "No record provided"}), 400
+        response = jsonify({"error": "No record provided"}), 400
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
 
 @app.route("/get_records", methods=["GET"])
 def get_records():
     with rekordy.cursor() as cur:
         cur.execute("SELECT * FROM rekordy")
         rekordy_records = cur.fetchall()
-        return jsonify(rekordy_records)
+        response = jsonify(rekordy_records)
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
 
 
 if __name__ == "__main__":
