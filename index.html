@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h3>RDS</h3>
+    <input type="text" id="message" placeholder="message">
+    <button id="btnSend">Send</button>
+    <button id="btnGet">Get</button>
+    <div id="resultBox"></div>
+
+    <h3>S3</h3>
+    <input type="file" id="inp">
+    <input type="text" id="name" placeholder="name">
+    <button id="btnUpload">Upload</button>
+    <button id="btnDownload">Download</button>
+
+    <script>
+        const BACKEND = 'http://localhost:8080'
+        const inp = document.getElementById('inp');
+        const btnUpload = document.getElementById('btnUpload');
+        const btnDownload = document.getElementById('btnDownload');
+        const btnSend = document.getElementById('btnSend');
+        const btnGet = document.getElementById('btnGet');
+        const resultBox = document.getElementById('resultBox');
+        const messageBox = document.getElementById('message');
+        const name = document.getElementById('name');
+        var url;
+        btnUpload.addEventListener('click', () => {
+            const filename = name.value;
+            const file = inp.files[0];
+            fetch(BACKEND+'/upload_url?filename=' + filename).then(res => res.json()).then(data => {
+                console.log("Data: ", data)
+                url = data.url;
+                
+                fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': file.type
+                    },
+                    body: file
+                }).then(res => {
+                    console.log("Upload response: ", res);
+                    if (res.ok) {
+                        console.log('File uploaded successfully');
+                    } else {
+                        console.error('Error uploading file');
+                    }
+                }).catch(err => {
+                    console.error('Error:', err);
+                });
+            })
+        });
+
+        btnDownload.addEventListener('click', () => {
+            const filename = name.value;
+            fetch(BACKEND + '/download_url?filename=' + filename).then(res => res.json()).then(data => {
+                console.log(data);
+                url = data.url;
+                console.log(url);
+                window.open(url, '_blank').focus();
+            }).catch(err => {
+                console.error('Error:', err);
+            });
+        });
+
+        btnSend.addEventListener('click', () => {
+            const message = messageBox.value;
+            fetch(BACKEND + '/add_record?record=' + message, { method: 'GET'}).then(res => res.json()).then(data => {
+                console.log(data);
+            }).catch(err => {
+                console.error('Error:', err);
+            });
+        });
+
+        btnGet.addEventListener('click', () => {
+            fetch(BACKEND + '/get_records', { method: 'GET'}).then(res => res.json()).then(data => {
+                console.log(data);
+                resultBox.innerHTML = data.map(record => `<p>${record}</p>`).join('');
+            }).catch(err => {
+                console.error('Error:', err);
+            });
+        });
+    </script>
+</body>
+
+</html>
